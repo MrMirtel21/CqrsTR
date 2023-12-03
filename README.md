@@ -1,2 +1,2 @@
 # CqrsTR
-Basic custom MediatR copy with CQRS split
+Simple mediator implementation in .NET with CQRS (MediatR clone)
