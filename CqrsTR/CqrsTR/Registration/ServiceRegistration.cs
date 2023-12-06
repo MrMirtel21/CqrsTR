@@ -1,5 +1,6 @@
 ﻿using CqrsTR.Commands;
 using CqrsTR.Extensions;
+using CqrsTR.Queries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
@@ -17,6 +18,7 @@ namespace CqrsTR.Registration
         {
             var assembliesToScan = configuration.AssembliesToRegister.Distinct().ToArray();
             ConnectImplementationsToTypesClosing(typeof(ICommandHandler<,>), services, assembliesToScan, false, configuration);
+            ConnectImplementationsToTypesClosing(typeof(IQueryDispatcher<,>), services, assembliesToScan, false, configuration);
         }
         private static void ConnectImplementationsToTypesClosing(
             Type openRequestInterface,

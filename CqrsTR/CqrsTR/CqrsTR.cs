@@ -3,6 +3,7 @@ using CqrsTR.Queries;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace CqrsTR
     {
         private readonly IServiceProvider _serviceProvider;
         private static readonly ConcurrentDictionary<Type, CommandHandlerBase> _commandHandlers = new();
+        private static readonly ConcurrentDictionary<Type, QueryDispatcherBase> _queryDispatchers= new();
         /// <summary>
         /// Initializes a new instance of the <see cref="CqrsTR"/> class.
         /// </summary>
@@ -27,12 +29,27 @@ namespace CqrsTR
 
         public Task<TResponse> Ask<TResponse>(IQuery<TResponse> query, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            if (query is null) 
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+            var dispatcher = _queryDispatchers.GetOrAdd(query.GetType(), static queryType => 
+            {
+                var wrapperType = typeof(QueryDispatcherWrapperImpl<,>).MakeGenericType(queryType, typeof(TResponse));
+                var wrapper = Activator.CreateInstance(wrapperType);
+                if (wrapper is null)
+                {
+                    throw new InvalidOperationException($"Could not create wrapper type for {queryType}");
+                }
+
+                return (QueryDispatcherBase)wrapper;
+            });
+            return ((QueryDispatcherWrapper<TResponse>)dispatcher).Dispatch(query, _serviceProvider, cancellationToken);
         }
 
         public Task<TResponse> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
