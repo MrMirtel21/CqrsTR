@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Cqrs" Version="5.0.0.32" />
+    <PackageReference Include="FluentValidation" Version="11.8.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
   </ItemGroup>
 

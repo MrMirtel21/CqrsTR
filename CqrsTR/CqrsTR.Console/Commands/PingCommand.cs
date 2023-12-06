@@ -3,13 +3,13 @@ using CqrsTR.Console.Models;
 
 namespace CqrsTR.Console.Commands
 {
-    public class Ping : ICommand<Pong>
+    public class PingCommand : ICommand<Pong>
     {
         public string Message { get; set; } = "Ping!";
     }
-    public class PingHandler : ICommandHandler<Ping, Pong>
+    public class PingCommandHandler : ICommandHandler<PingCommand, Pong>
     {
-        public Task<Pong> Handle(Ping command, CancellationToken cancellationToken)
+        public Task<Pong> Handle(PingCommand command, CancellationToken cancellationToken)
         {
             return Task.FromResult(new Pong());
         }

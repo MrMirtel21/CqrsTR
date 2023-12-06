@@ -3,13 +3,13 @@ using CqrsTR.Queries;
 
 namespace CqrsTR.Console.Queries
 {
-    public class AskPong : IQuery<Pong>
+    public class PongQuery : IQuery<Pong>
     {
         public string Message { get; set; } = "Pong?";
     }
-    public class AskPongDispatcher : IQueryDispatcher<AskPong, Pong>
+    public class PongQueryDispatcher : IQueryDispatcher<PongQuery, Pong>
     {
-        public Task<Pong> Dispatch(AskPong query, CancellationToken cancellationToken)
+        public Task<Pong> Dispatch(PongQuery query, CancellationToken cancellationToken)
         {
             return Task.FromResult(new Pong());
         }

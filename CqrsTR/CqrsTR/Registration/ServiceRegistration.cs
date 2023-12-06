@@ -179,6 +179,15 @@ namespace CqrsTR.Registration
         {
             // Use TryAdd, so any existing ServiceFactory/ICqrsTR registration doesn't get overridden
             services.TryAdd(new ServiceDescriptor(typeof(ICqrsTR), serviceConfiguration.ImplementationType, serviceConfiguration.Lifetime));
+            foreach (var serviceDescriptor in serviceConfiguration.ValidationBehaviorsToRegister)
+            {
+                services.TryAddEnumerable(serviceDescriptor);
+            }
+
+            foreach (var serviceDescriptor in serviceConfiguration.BehaviorsToRegister)
+            {
+                services.TryAddEnumerable(serviceDescriptor);
+            }
 
         }
     }

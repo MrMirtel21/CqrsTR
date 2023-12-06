@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CqrsTR.Behaviors;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CqrsTR.Commands
 {
@@ -23,8 +24,20 @@ namespace CqrsTR.Commands
         }
         public override Task<TResponse> Handle(ICommand<TResponse> request, IServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
-            var handler = serviceProvider.GetRequiredService<ICommandHandler<TCommand, TResponse>>();
-            return handler.Handle((TCommand)request, cancellationToken);
+            Task<TResponse> MainHandler() => serviceProvider.GetRequiredService<ICommandHandler<TCommand, TResponse>>().Handle((TCommand)request, cancellationToken);
+            Task<TResponse> pipelineWithValidations() => serviceProvider
+                .GetServices<IValidationBehavior<TCommand, TResponse>>()
+                .Aggregate(
+                    (RequestHandlerDelegate<TResponse>)MainHandler,
+                    (next, pipeline) => () => pipeline.Validate((TCommand)request, next, cancellationToken)
+                )();
+            var pipelineWithAlBehaviours = serviceProvider
+                .GetServices<IPipelineBehavior<TCommand, TResponse>>()
+                .Aggregate(
+                    (RequestHandlerDelegate<TResponse>)pipelineWithValidations,
+                    (next, pipeline) => () => pipeline.Handle((TCommand)request, next, cancellationToken)
+                );
+            return pipelineWithAlBehaviours();
         }
 
     }

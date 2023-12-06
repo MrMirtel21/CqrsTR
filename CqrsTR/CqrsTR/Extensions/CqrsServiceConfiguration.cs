@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CqrsTR.Behaviors;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,14 @@ namespace CqrsTR.Extensions
         /// </summary>
         public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Transient;
         internal List<Assembly> AssembliesToRegister { get; } = new();
+        /// <summary>
+        /// List of validation behaviors to register in specific order
+        /// </summary>
+        public List<ServiceDescriptor> ValidationBehaviorsToRegister { get; } = new();
+        /// <summary>
+        /// List of behaviors to register in specific order
+        /// </summary>
+        public List<ServiceDescriptor> BehaviorsToRegister { get; } = new();
         /// <summary>
         /// Register various handlers from assembly containing given type
         /// </summary>
@@ -55,6 +64,58 @@ namespace CqrsTR.Extensions
             AssembliesToRegister.AddRange(assemblies);
 
             return this;
+        }
+        /// <summary>
+        /// Registers an open validation behavior type against the <see cref="IValidationBehavior{TRequest,TResponse}"/> open generic interface type
+        /// </summary>
+        /// <param name="openValidationBehaviorType">An open generic behavior type</param>
+        /// <param name="serviceLifetime">Optional service lifetime, defaults to <see cref="ServiceLifetime.Transient"/>.</param>
+        /// <returns>This</returns>
+        public CqrsServiceConfiguration AddOpenValidatorBehavior(Type openValidationBehaviorType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+        {
+            var implementedOpenBehaviorInterfaces = GetImplementedOpenBehavioursByType(openValidationBehaviorType, typeof(IValidationBehavior<,>));
+
+            foreach (var openBehaviorInterface in implementedOpenBehaviorInterfaces)
+            {
+                ValidationBehaviorsToRegister.Add(new ServiceDescriptor(openBehaviorInterface, openValidationBehaviorType, serviceLifetime));
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Registers an open behavior type against the <see cref="IPipelineBehavior{TRequest,TResponse}"/> open generic interface type
+        /// </summary>
+        /// <param name="openBehaviorType">An open generic behavior type</param>
+        /// <param name="serviceLifetime">Optional service lifetime, defaults to <see cref="ServiceLifetime.Transient"/>.</param>
+        /// <returns>This</returns>
+        public CqrsServiceConfiguration AddOpenBehavior(Type openBehaviorType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+        {
+            var implementedOpenBehaviorInterfaces = GetImplementedOpenBehavioursByType(openBehaviorType,typeof(IPipelineBehavior<,>));
+
+            foreach (var openBehaviorInterface in implementedOpenBehaviorInterfaces)
+            {
+                BehaviorsToRegister.Add(new ServiceDescriptor(openBehaviorInterface, openBehaviorType, serviceLifetime));
+            }
+
+            return this;
+        }
+        private HashSet<Type> GetImplementedOpenBehavioursByType(Type serviceType, Type implementationType) 
+        {
+
+            if (!serviceType.IsGenericType)
+            {
+                throw new InvalidOperationException($"{serviceType.Name} must be generic");
+            }
+
+            var implementedGenericInterfaces = serviceType.GetInterfaces().Where(i => i.IsGenericType).Select(i => i.GetGenericTypeDefinition());
+            var implementedOpenBehaviorInterfaces = new HashSet<Type>(implementedGenericInterfaces.Where(i => i == implementationType));
+
+            if (implementedOpenBehaviorInterfaces.Count == 0)
+            {
+                throw new InvalidOperationException($"{serviceType.Name} must implement {implementationType.FullName}");
+            }
+            return implementedOpenBehaviorInterfaces;
         }
 
     }
