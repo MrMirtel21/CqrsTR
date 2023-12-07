@@ -12,9 +12,10 @@ Console.WriteLine("Hell CqrsTR!");
 var services = new ServiceCollection();
 services.AddSingleton(TextWriter.Null);
 services.AddSingleton<IValidator<PingCommand>,PingCommandValidator>();
+services.AddSingleton<IValidator<PongQuery>, PongQueryValidator>();
 services.AddCqrsTR(cfg => {
     cfg.RegisterServicesFromAssemblyContaining(typeof(PingCommand));
-    cfg.AddOpenValidatorBehavior(typeof(CommandFluentValidationBehavior<,>));
+    cfg.AddOpenValidatorBehavior(typeof(FluentValidationBehavior<,>));
     cfg.AddOpenBehavior(typeof(GenericPipelineBehavior<,>));
 });
 var provider = services.BuildServiceProvider();

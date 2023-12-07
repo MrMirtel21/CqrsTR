@@ -1,5 +1,6 @@
 ﻿using CqrsTR.Behaviors;
 using CqrsTR.Commands;
+using CqrsTR.Queries;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,12 +12,12 @@ using System.Windows.Input;
 
 namespace CqrsTR.Console.Behaviors
 {
-    public class CommandFluentValidationBehavior<TRequest, TResponse> : IValidationBehavior<TRequest, TResponse>
-        where TRequest : ICommand<TResponse>
+    public class FluentValidationBehavior<TRequest, TResponse> : IValidationBehavior<TRequest, TResponse>
+        where TRequest : notnull
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-        public CommandFluentValidationBehavior(
+        public FluentValidationBehavior(
             IEnumerable<IValidator<TRequest>> validators)
         {
             _validators = validators;

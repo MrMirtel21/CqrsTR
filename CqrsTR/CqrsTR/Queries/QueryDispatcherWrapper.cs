@@ -1,4 +1,5 @@
-﻿using CqrsTR.Commands;
+﻿using CqrsTR.Behaviors;
+using CqrsTR.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -29,8 +30,21 @@ namespace CqrsTR.Queries
         }
         public override Task<TResponse> Dispatch(IQuery<TResponse> request, IServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
-            var handler = serviceProvider.GetRequiredService<IQueryDispatcher<TQuery, TResponse>>();
-            return handler.Dispatch((TQuery)request, cancellationToken);
+            Task<TResponse> MainDispatcher() => serviceProvider.GetRequiredService<IQueryDispatcher<TQuery, TResponse>>().Dispatch((TQuery)request, cancellationToken);
+            var manolo = serviceProvider.GetServices<IValidationBehavior<TQuery, TResponse>>();
+            Task<TResponse> pipelineWithValidations() => serviceProvider
+                .GetServices<IValidationBehavior<TQuery, TResponse>>()
+                .Aggregate(
+                    (RequestHandlerDelegate<TResponse>)MainDispatcher,
+                    (next, pipeline) => () => pipeline.Validate((TQuery)request, next, cancellationToken)
+                )();
+            var pipelineWithAlBehaviours = serviceProvider
+                .GetServices<IPipelineBehavior<TQuery, TResponse>>()
+                .Aggregate(
+                    (RequestHandlerDelegate<TResponse>)pipelineWithValidations,
+                    (next, pipeline) => () => pipeline.Handle((TQuery)request, next, cancellationToken)
+                );
+            return pipelineWithAlBehaviours();
         }
 
     }

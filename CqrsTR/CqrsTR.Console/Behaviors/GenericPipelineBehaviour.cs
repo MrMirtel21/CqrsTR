@@ -1,14 +1,10 @@
 ﻿using CqrsTR.Behaviors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CqrsTR.Commands;
 
 namespace CqrsTR.Console.Behaviors
 {
     public class GenericPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
+    where TRequest : ICommand<TResponse>
     {
         private readonly TextWriter _writer;
 
