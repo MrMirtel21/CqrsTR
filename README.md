@@ -7,7 +7,7 @@ Supports commands and queries.
 CqrsTR supports `Microsoft.Extensions.DependencyInjection.Abstractions` directly. To register various CqrsTR services and handlers:
 
 ```
-services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
+services.AddCqrsTR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
 ```
 
 This registers:
